@@ -17,7 +17,7 @@ create table if not exists public.transactions (
   customer_name text not null,
   total_amount numeric not null,
   status text not null,
-  created_at text not null
+  created_at timestamptz not null default now()
 );
 
 -- Seed data

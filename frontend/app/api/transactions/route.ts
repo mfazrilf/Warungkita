@@ -21,6 +21,9 @@ export async function POST(request: Request) {
   if (!customer_name || total_amount == null || !status) {
     return NextResponse.json({ error: 'Semua field transaksi wajib diisi' }, { status: 400 });
   }
+  if (typeof total_amount !== 'number' || total_amount <= 0) {
+    return NextResponse.json({ error: 'Total amount harus berupa angka positif' }, { status: 400 });
+  }
 
   const { data, error } = await supabase
     .from('transactions')

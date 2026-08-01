@@ -1,3 +1,6 @@
+'use client';
+
+import { useState } from 'react';
 import Link from 'next/link';
 import { ShoppingCart, Search, Warehouse, Tag, DollarSign, Box, Package } from 'lucide-react';
 import { createSupabase } from '@/lib/supabase/server';
@@ -14,12 +17,16 @@ const categoryIcons = [
 
 export const dynamic = 'force-dynamic';
 
-export default async function HomePage() {
+export default function HomePage() {
+  const [searchQuery, setSearchQuery] = useState('');
   const supabase = createSupabase();
-  const { data: products } = await supabase.from('products').select('*').order('id');
+  const { data: products } = supabase.from('products').select('*').order('id');
 
   const items = products ?? [];
-  const categories = categoryIcons.filter((c) => items.some((p) => p.category.toLowerCase().includes(c.name.split(' ')[0].toLowerCase())));
+  const filteredItems = searchQuery
+    ? items.filter((p) => p.name.toLowerCase().includes(searchQuery.toLowerCase()))
+    : items;
+  const categories = categoryIcons.filter((c) => filteredItems.some((p) => p.category.toLowerCase().includes(c.name.split(' ')[0].toLowerCase())));
 
   return (
     <main className="min-h-screen bg-slate-50 text-slate-900">
@@ -38,12 +45,14 @@ export default async function HomePage() {
             <input
               type="search"
               placeholder="Cari produk..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
               className="w-64 bg-transparent text-sm outline-none placeholder:text-slate-400"
             />
           </div>
 
           <div className="flex items-center gap-4">
-            <button className="inline-flex items-center gap-2 rounded-full bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-emerald-700">
+            <button className="inline-flex items-center gap-2 rounded-full bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-emerald-700" onClick={() => alert('Keranjang fitur sedang dalam pengembangan')}>
               <ShoppingCart className="h-4 w-4" />
               Keranjang
             </button>
@@ -125,7 +134,7 @@ export default async function HomePage() {
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            {items.map((product) => (
+            {filteredItems.map((product) => (
               <article key={product.id} className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
                 <div className="mb-3 flex h-44 items-center justify-center rounded-3xl bg-slate-100">
                   <Package className="h-14 w-14 text-slate-300" />

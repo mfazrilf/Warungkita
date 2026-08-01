@@ -1,21 +1,35 @@
+'use client';
+
+import { useState } from 'react';
 import Link from 'next/link';
 import { ArrowUpRight, ClipboardList, FileText, Package, TrendingUp } from 'lucide-react';
 import { createSupabase } from '@/lib/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
-export default async function AdminPage() {
+export default function AdminPage() {
   const supabase = createSupabase();
-  const { data: products } = await supabase.from('products').select('*').order('id');
-  const { data: transactions } = await supabase.from('transactions').select('*').order('created_at', { ascending: false });
+  const { data: products } = supabase.from('products').select('*').order('id');
+  const { data: transactions } = supabase.from('transactions').select('*').order('created_at', { ascending: false });
 
   const productList = products ?? [];
   const transactionList = transactions ?? [];
+
+  const [deletingId, setDeletingId] = useState<number | null>(null);
 
   const lowStock = productList.filter((p) => p.stock <= p.min_stock_alert).length;
   const totalSalesToday = transactionList
     .filter((t) => t.created_at?.startsWith(new Date().toISOString().slice(0, 10)))
     .reduce((sum, t) => sum + (t.total_amount ?? 0), 0);
+
+  const handleDelete = async (id: number) => {
+    if (!confirm('Hapus produk ini?')) return;
+    setDeletingId(id);
+    const { error } = await supabase.from('products').delete().eq('id', id);
+    setDeletingId(null);
+    if (error) alert('Gagal menghapus produk');
+    else window.location.reload();
+  };
 
   const stats = [
     { label: 'Total Penjualan Hari Ini', value: new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(totalSalesToday), icon: TrendingUp },
@@ -87,9 +101,11 @@ export default async function AdminPage() {
                       <td className="px-4 py-4 text-slate-700">{product.stock}</td>
                       <td className="px-4 py-4 text-slate-700">{product.unit}</td>
                       <td className="px-4 py-4 space-x-2">
-                        <button className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700 hover:bg-slate-200">Edit</button>
-                        <button className="rounded-full bg-rose-100 px-3 py-1 text-xs font-medium text-rose-700 hover:bg-rose-200">Hapus</button>
-                      </td>
+                          <button className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700 hover:bg-slate-200" onClick={() => alert('Fitur edit sedang dalam pengembangan')}>Edit</button>
+                          <button className="rounded-full bg-rose-100 px-3 py-1 text-xs font-medium text-rose-700 hover:bg-rose-200" onClick={() => handleDelete(product.id)} disabled={deletingId === product.id}>
+                            {deletingId === product.id ? 'Menghapus...' : 'Hapus'}
+                          </button>
+                        </td>
                     </tr>
                   ))}
                 </tbody>

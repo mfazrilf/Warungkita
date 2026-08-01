@@ -21,6 +21,15 @@ export async function POST(request: Request) {
   if (!name || !category || price == null || stock == null || !unit || min_stock_alert == null) {
     return NextResponse.json({ error: 'Semua field produk wajib diisi' }, { status: 400 });
   }
+  if (typeof price !== 'number' || price < 0) {
+    return NextResponse.json({ error: 'Harga harus berupa angka positif' }, { status: 400 });
+  }
+  if (!Number.isInteger(stock) || stock < 0) {
+    return NextResponse.json({ error: 'Stok harus berupa bilangan bulat non-negatif' }, { status: 400 });
+  }
+  if (!Number.isInteger(min_stock_alert) || min_stock_alert < 0) {
+    return NextResponse.json({ error: 'Min stock alert harus berupa bilangan bulat non-negatif' }, { status: 400 });
+  }
 
   const { data, error } = await supabase
     .from('products')

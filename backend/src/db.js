@@ -5,8 +5,9 @@ const dbPath = path.join(__dirname, '..', 'data', 'warungkita.db');
 const db = new sqlite3.Database(dbPath);
 
 const initializeDatabase = () => {
-  db.serialize(() => {
-    db.run(`CREATE TABLE IF NOT EXISTS products (
+  return new Promise((resolve, reject) => {
+    db.serialize(() => {
+      db.run(`CREATE TABLE IF NOT EXISTS products (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT NOT NULL,
       category TEXT NOT NULL,
@@ -14,15 +15,20 @@ const initializeDatabase = () => {
       stock INTEGER NOT NULL,
       unit TEXT NOT NULL,
       min_stock_alert INTEGER NOT NULL
-    )`);
-
-    db.run(`CREATE TABLE IF NOT EXISTS transactions (
+    )`, (err) => {
+        if (err) return reject(err);
+        db.run(`CREATE TABLE IF NOT EXISTS transactions (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       customer_name TEXT NOT NULL,
       total_amount REAL NOT NULL,
       status TEXT NOT NULL,
       created_at TEXT NOT NULL
-    )`);
+    )`, (err) => {
+          if (err) return reject(err);
+          resolve();
+        });
+      });
+    });
   });
 };
 

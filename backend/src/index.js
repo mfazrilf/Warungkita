@@ -19,7 +19,13 @@ app.get('/', (req, res) => {
 
 app.use('/api', routes);
 
-initializeDatabase();
+initializeDatabase()
+  .then(() => {
+    console.log('Database initialized');
+  })
+  .catch((err) => {
+    console.error('Database initialization failed:', err);
+  });
 
 app.listen(port, () => {
   console.log(`WarungKita backend berjalan di http://localhost:${port}`);

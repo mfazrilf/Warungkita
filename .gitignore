@@ -1,6 +1,7 @@
 node_modules/
 .DS_Store
 .env
+personal token github.txt
 
 frontend/node_modules/
 frontend/.next/

@@ -16,6 +16,15 @@ router.post('/products', (req, res) => {
   if (!name || !category || price == null || stock == null || !unit || min_stock_alert == null) {
     return res.status(400).json({ error: 'Semua field produk wajib diisi' });
   }
+  if (typeof price !== 'number' || price < 0) {
+    return res.status(400).json({ error: 'Harga harus berupa angka positif' });
+  }
+  if (!Number.isInteger(stock) || stock < 0) {
+    return res.status(400).json({ error: 'Stok harus berupa bilangan bulat non-negatif' });
+  }
+  if (!Number.isInteger(min_stock_alert) || min_stock_alert < 0) {
+    return res.status(400).json({ error: 'Min stock alert harus berupa bilangan bulat non-negatif' });
+  }
 
   db.run(
     'INSERT INTO products (name, category, price, stock, unit, min_stock_alert) VALUES (?, ?, ?, ?, ?, ?)',
@@ -72,6 +81,9 @@ router.post('/transactions', (req, res) => {
   const { customer_name, total_amount, status } = req.body;
   if (!customer_name || total_amount == null || !status) {
     return res.status(400).json({ error: 'Semua field transaksi wajib diisi' });
+  }
+  if (typeof total_amount !== 'number' || total_amount <= 0) {
+    return res.status(400).json({ error: 'Total amount harus berupa angka positif' });
   }
 
   const createdAt = new Date().toISOString();
