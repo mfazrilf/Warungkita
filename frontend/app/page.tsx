@@ -1,24 +1,26 @@
 import Link from 'next/link';
-import { ShoppingCart, Search, Warehouse, Tag, DollarSign, Box } from 'lucide-react';
+import { ShoppingCart, Search, Warehouse, Tag, DollarSign, Box, Package } from 'lucide-react';
+import { createSupabase } from '@/lib/supabase/server';
 
-const categories = [
+const formatRupiah = (value: number) =>
+  new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(value);
+
+const categoryIcons = [
   { name: 'Beras & Biji-bijian', icon: Warehouse },
   { name: 'Minyak & Lemak', icon: Tag },
   { name: 'Gula & Bumbu Dapur', icon: Box },
   { name: 'Sembako & Harian', icon: DollarSign }
 ];
 
-const products = [
-  { id: 1, name: 'Beras Premium 5kg', category: 'Beras & Biji-bijian', unit: 'sak 5kg', price: 85000, stock: 12 },
-  { id: 2, name: 'Minyak Goreng 2L', category: 'Minyak & Lemak', unit: 'pcs', price: 34000, stock: 5 },
-  { id: 3, name: 'Gula Pasir 1kg', category: 'Gula & Bumbu Dapur', unit: 'kg', price: 16000, stock: 8 },
-  { id: 4, name: 'Mie Instan 1 dus', category: 'Sembako & Harian', unit: 'paket', price: 68000, stock: 0 }
-];
+export const dynamic = 'force-dynamic';
 
-const formatRupiah = (value: number) =>
-  new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(value);
+export default async function HomePage() {
+  const supabase = createSupabase();
+  const { data: products } = await supabase.from('products').select('*').order('id');
 
-export default function HomePage() {
+  const items = products ?? [];
+  const categories = categoryIcons.filter((c) => items.some((p) => p.category.toLowerCase().includes(c.name.split(' ')[0].toLowerCase())));
+
   return (
     <main className="min-h-screen bg-slate-50 text-slate-900">
       <header className="border-b bg-white shadow-sm">
@@ -78,11 +80,11 @@ export default function HomePage() {
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-2">
               <div className="rounded-3xl bg-emerald-600 px-5 py-6 text-white">
                 <p className="text-sm">Total Produk</p>
-                <p className="mt-4 text-3xl font-semibold">24</p>
+                <p className="mt-4 text-3xl font-semibold">{items.length}</p>
               </div>
               <div className="rounded-3xl bg-slate-900 px-5 py-6 text-white">
-                <p className="text-sm">Pesanan Masuk</p>
-                <p className="mt-4 text-3xl font-semibold">16</p>
+                <p className="text-sm">Stok Menipis</p>
+                <p className="mt-4 text-3xl font-semibold">{items.filter((p) => p.stock <= p.min_stock_alert).length}</p>
               </div>
             </div>
           </div>
@@ -119,13 +121,15 @@ export default function HomePage() {
               <p className="text-sm uppercase tracking-[0.24em] text-slate-500">Katalog Produk</p>
               <h2 className="text-3xl font-semibold">Produk sembako favorit</h2>
             </div>
-            <div className="rounded-full bg-slate-100 px-4 py-2 text-sm text-slate-600">4 Produk</div>
+            <div className="rounded-full bg-slate-100 px-4 py-2 text-sm text-slate-600">{items.length} Produk</div>
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            {products.map((product) => (
+            {items.map((product) => (
               <article key={product.id} className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-                <div className="mb-3 h-44 rounded-3xl bg-slate-100"></div>
+                <div className="mb-3 flex h-44 items-center justify-center rounded-3xl bg-slate-100">
+                  <Package className="h-14 w-14 text-slate-300" />
+                </div>
                 <div className="space-y-3">
                   <div className="flex items-center justify-between gap-2 text-sm text-slate-500">
                     <span>{product.category}</span>
@@ -135,7 +139,7 @@ export default function HomePage() {
                   <p className="text-lg font-semibold text-emerald-600">{formatRupiah(product.price)}</p>
                   <div className="flex items-center justify-between gap-3">
                     <span className={`rounded-full px-3 py-1 text-sm ${product.stock > 0 ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}`}>
-                      {product.stock > 0 ? 'Tersedia' : 'Habis'}
+                      {product.stock > 0 ? `Stok ${product.stock} ${product.unit}` : 'Habis'}
                     </span>
                     <button
                       className="rounded-2xl bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:bg-slate-300"

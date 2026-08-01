@@ -8,6 +8,15 @@ const port = process.env.PORT || 4000;
 
 app.use(cors());
 app.use(express.json());
+
+app.get('/', (req, res) => {
+  res.json({
+    name: 'WarungKita Backend',
+    status: 'ok',
+    endpoints: ['/api/products', '/api/products/:id/stock', '/api/transactions'],
+  });
+});
+
 app.use('/api', routes);
 
 initializeDatabase();

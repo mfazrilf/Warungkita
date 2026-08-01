@@ -1,26 +1,29 @@
 import Link from 'next/link';
-import { ArrowUpRight, Box, ClipboardList, FileText, Package, TrendingUp } from 'lucide-react';
+import { ArrowUpRight, ClipboardList, FileText, Package, TrendingUp } from 'lucide-react';
+import { createSupabase } from '@/lib/supabase/server';
 
-const stats = [
-  { label: 'Total Penjualan Hari Ini', value: 'Rp 2.180.000', icon: TrendingUp },
-  { label: 'Produk Aktif', value: '32', icon: Package },
-  { label: 'Peringatan Stok Menipis', value: '4 Barang', icon: ClipboardList },
-  { label: 'Pesanan Masuk', value: '12', icon: FileText }
-];
+export const dynamic = 'force-dynamic';
 
-const products = [
-  { id: 'P001', name: 'Beras Premium 5kg', category: 'Beras & Biji-bijian', price: 85000, stock: 12, unit: 'sak 5kg' },
-  { id: 'P002', name: 'Minyak Goreng 2L', category: 'Minyak & Lemak', price: 34000, stock: 5, unit: 'pcs' },
-  { id: 'P003', name: 'Gula Pasir 1kg', category: 'Gula & Bumbu Dapur', price: 16000, stock: 8, unit: 'kg' }
-];
+export default async function AdminPage() {
+  const supabase = createSupabase();
+  const { data: products } = await supabase.from('products').select('*').order('id');
+  const { data: transactions } = await supabase.from('transactions').select('*').order('created_at', { ascending: false });
 
-const orders = [
-  { id: 'TRX-001', customer: 'Ibu Sari', total: 'Rp 140.000', status: 'Pending' },
-  { id: 'TRX-002', customer: 'Pak Budi', total: 'Rp 98.000', status: 'Diproses' },
-  { id: 'TRX-003', customer: 'Toko Makmur', total: 'Rp 265.000', status: 'Selesai' }
-];
+  const productList = products ?? [];
+  const transactionList = transactions ?? [];
 
-export default function AdminPage() {
+  const lowStock = productList.filter((p) => p.stock <= p.min_stock_alert).length;
+  const totalSalesToday = transactionList
+    .filter((t) => t.created_at?.startsWith(new Date().toISOString().slice(0, 10)))
+    .reduce((sum, t) => sum + (t.total_amount ?? 0), 0);
+
+  const stats = [
+    { label: 'Total Penjualan Hari Ini', value: new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(totalSalesToday), icon: TrendingUp },
+    { label: 'Produk Aktif', value: String(productList.length), icon: Package },
+    { label: 'Peringatan Stok Menipis', value: `${lowStock} Barang`, icon: ClipboardList },
+    { label: 'Pesanan Masuk', value: String(transactionList.length), icon: FileText }
+  ];
+
   return (
     <main className="min-h-screen bg-slate-50 text-slate-900">
       <header className="border-b bg-white shadow-sm">
@@ -75,9 +78,9 @@ export default function AdminPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200">
-                  {products.map((product) => (
+                  {productList.map((product) => (
                     <tr key={product.id} className="bg-white">
-                      <td className="px-4 py-4 text-slate-700">{product.id}</td>
+                      <td className="px-4 py-4 text-slate-700">P{String(product.id).padStart(3, '0')}</td>
                       <td className="px-4 py-4 text-slate-700">{product.name}</td>
                       <td className="px-4 py-4 text-slate-700">{product.category}</td>
                       <td className="px-4 py-4 text-slate-700">Rp {product.price.toLocaleString('id-ID')}</td>
@@ -100,18 +103,23 @@ export default function AdminPage() {
               <h2 className="text-2xl font-semibold">Transaksi terbaru</h2>
             </div>
             <div className="space-y-4">
-              {orders.map((order) => (
+              {transactionList.map((order) => (
                 <div key={order.id} className="rounded-3xl border border-slate-200 p-4">
                   <div className="flex items-center justify-between gap-3">
                     <div>
-                      <p className="text-sm font-medium text-slate-800">{order.customer}</p>
-                      <p className="text-xs text-slate-500">{order.id}</p>
+                      <p className="text-sm font-medium text-slate-800">{order.customer_name}</p>
+                      <p className="text-xs text-slate-500">TRX-{String(order.id).padStart(3, '0')}</p>
                     </div>
                     <span className="rounded-full bg-slate-100 px-3 py-1 text-xs text-slate-700">{order.status}</span>
                   </div>
-                  <p className="mt-3 text-sm text-slate-600">Total: {order.total}</p>
+                  <p className="mt-3 text-sm text-slate-600">
+                    Total: {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(order.total_amount)}
+                  </p>
                 </div>
               ))}
+              {transactionList.length === 0 && (
+                <p className="rounded-3xl border border-dashed border-slate-200 p-4 text-sm text-slate-400">Belum ada transaksi.</p>
+              )}
             </div>
           </section>
         </div>
