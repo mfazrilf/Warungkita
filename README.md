@@ -13,8 +13,8 @@ Website e-commerce sembako dan dashboard admin untuk manajemen stok dan transaks
 1. Buat file `frontend/.env.local` (contoh di `frontend/.env.example`):
 
    ```
-   NEXT_PUBLIC_SUPABASE_URL=https://xxxxxxxx.supabase.co
-   NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...
+   NEXT_PUBLIC_SUPABASE_URL=https://klldpybmikxbtnopskyo.supabase.co
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtsbGRweWJtaWt4YnRub3Bza3lvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU1Nzc5ODcsImV4cCI6MjEwMTE1Mzk4N30.-tD-4EjMiyEbSbry5sRqIYIutafyJmYoEYXB7CwKTf4
    ```
 
 2. Jalankan SQL di `supabase/schema.sql` pada Supabase Dashboard > SQL Editor.
