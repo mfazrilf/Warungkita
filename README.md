@@ -1,4 +1,4 @@
-# WarungKita
+# WarungKita (MANGKRAK)
 
 Website e-commerce sembako dan dashboard admin untuk manajemen stok dan transaksi.
 
